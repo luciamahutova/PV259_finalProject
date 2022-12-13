@@ -3,6 +3,7 @@ Jellyfish in the ocean - meditation and study focus
 ------------------------------------------------------
 1. Link for multiple jellyfish (used for landscape video format): https://editor.p5js.org/LuciaMahutova/full/NT0C3bDKy
 2. Link for single jellyfish (used for portrait video format): https://editor.p5js.org/LuciaMahutova/full/tyyly_hnO
+
 ------------------------------------------------------
 CONCEPT:
 Make something calm for meditation to reduce everyday stress - simulate Jellyfish and their natural movement in the water, eg. by using Bezier curves. 
@@ -22,8 +23,9 @@ Possible interaction: clicking on jellyfish and make it shine (will see if its g
 TECHNOLOGY:
 p5.js
 
-INSPIRATION:
-Just inspiration, the goal is to make water and jellyfish more realistic: https://openprocessing.org/sketch/1473124
+INSPIRATION: 
+Just inspiration, the gole is to make water and jellyfish more realistic (3D): https://openprocessing.org/sketch/1473124
+
 ------------------------------------------------------
 CURRENT STATE OF PROJECT: 
 3D jellyfish, its movement, bubbles, static background
