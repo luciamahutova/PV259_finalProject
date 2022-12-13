@@ -148,21 +148,21 @@ class JellyFish{
         // Longer legs - inside
         this.drawBezier(5,0,i, // x1, y1, z1
                5, 30, i, // x2, y2, z2
-               10 + 12 * sin(val * 0.3),40,i, // x3, y3, z3
+               10 + 12 * sin(val * 0.4),40,i, // x3, y3, z3
                10 + 12 * sin(val), 90 - 10 * sin(val),i, // x4, y4, z4
                4.5, this.legsColor); // number = width of legs
         
         // Longer legs - outside, thicker
         this.drawBezier(10,0,i, // x1, y1, z1
                5, 50, i, // x2, y2, z2
-               12 + 12 * sin(val * 0.3),40,i, // x3, y3, z3
+               12 + 12 * sin(val * 0.45),40,i, // x3, y3, z3
                20 + 12 * sin(val), 90 - 10 * sin(val),i, // x4, y4, z4
                2, this.legsColor); // number = width of legs
         
         // Shorter legs
         this.drawBezier(20,10,i, 
                20,30,i, // x2, y2, z2
-               25 + 10 * sin(val * 0.65),40,i, // x3, y3, z3
+               25 + 10 * sin(val * 0.8),40,i, // x3, y3, z3
                40 + 10 * sin(val),70 - 10 * sin(val),i, // x4, y4, z4
                2, "rgba(189, 181, 213, 0.5)"); // 'Wisteria' color
         pop();
