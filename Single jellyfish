@@ -1,0 +1,361 @@
+// Can help with the speed (more jellyfish = more slow)
+p5.disableFriendlyErrors = true;
+
+let headVal1 = headVal2 = headVal3 = headVal4 = headVal5 = headVal6 = headVal7 = 0;
+let legsVal1 = legsVal2 = legsVal3 = legsVal4 = legsVal5 = legsVal6 = legsVal7 = 0;
+var yoff = 0.0;
+let mySound;
+let sound_2;
+let bubbles = [];
+let availableSounds = ["forest-lullaby-110624.mp3", "slow-motion-121841.mp3", "waves_and_piano.mp3"];
+
+let noiseScale = 0.02;
+let padding = 25;
+let jellyFish = [];
+let jellyfishColors = ["rgba(189, 181, 213, 0.3)", "rgba(19, 56, 85, 0.5)",
+                      "rgba(107, 102, 158, 0.4)", "rgba(187, 144, 200, 0.3)",
+                      "rgba(189, 181, 213, 0.4)",  "rgba(239, 216, 236, 0.3)",
+                      "rgba(19, 56, 85, 0.4)"]; // 7 colors = 7 jellyfish
+let jellyfishLegsColors = ["rgba(189, 181, 213, 0.4)", "rgba(19, 56, 85, 0.5)",
+                      "rgba(107, 102, 158, 0.4)", "rgba(187, 144, 200, 0.3)",
+                      "rgba(189, 181, 213, 0.4)",  "rgba(239, 216, 236, 0.3)",
+                      "rgba(19, 56, 85, 0.4)"];
+
+let t = "up";
+let m = 0;
+let h = 0;
+var yoff = 0.0 // For waves
+
+function preload() {
+  mySound = loadSound(availableSounds[2]);
+}
+
+function setup() {
+  createCanvas(windowWidth, windowHeight, WEBGL);
+  mySound.play();
+  mySound.loop(); // Loop sound
+  amplitude = new p5.Amplitude();
+  amplitude.setInput(mySound);
+  
+  // Only 1 jellyfish
+  jellyFish[0] = new JellyFish(jellyfishColors[0], jellyfishLegsColors[0]);
+  
+  let bubbleNumber = int(random(50, 150))
+	for(var j=0; j< bubbleNumber; j++){
+		let bubble = randomBubble(j, bubbleNumber);
+		bubbles.push(bubble);
+	}
+}
+
+function draw() {
+  background(10, 70, 100);
+  
+  // Settins for portrait format
+  //background("transparent");
+  //clear();
+  
+  // Independent movement of jellyfish - random() must be global and in draw()!
+  // 1
+  headVal1 = headVal1 + random(0.03, 0.06);  // Effects movement of head!
+  legsVal1 = legsVal1 + random(0.03, 0.06);  // Effects movement of legs!
+
+  translate(10, 30 * sin(headVal1), 10); // Movement up and down 
+  for (let i = 0; i < jellyFish.length; i++) {
+		jellyFish[i].move();
+		jellyFish[i].display(i);
+		
+		if(!jellyFish[i].isInside()){
+			jellyFish[i].direction = jellyFish[i].direction.mult(-1)
+			jellyFish[i].x = jellyFish[i].x + jellyFish[i].direction.x ;
+			jellyFish[i].y = jellyFish[i].y + jellyFish[i].direction.y ;
+		}
+		
+		jellyFish[i].updateVel();
+		
+		if(jellyFish[i].vel < 0.1){ // ZMENENE Z 0.05
+			jellyFish[i].changeVel();
+			jellyFish[i].changeDirection();
+		}
+  }
+ 
+  translate(-10, -30 * sin(headVal1), -10);
+  for(var j=0; j< bubbles.length; j++){
+		let bubble = bubbles[j];
+		drawBubble(bubble);
+	}
+  
+  // NOT FINISHED
+  // drawWaves();
+}
+
+/////////////////////////////////////////////
+// Jellyfish
+/////////////////////////////////////////////
+
+class JellyFish{
+	constructor(jellyfishColor, legsColor){
+        // WEBGL = the origin is positioned at the center of the canvas
+		this.x = 0;   
+        this.y = -100;
+        this.z = 0;
+		this.r = 20;                                                           
+		this.type = "up";                          
+		this.angle = PI;
+		this.direction = p5.Vector.fromAngle(this.angle, 3); // only 2D vector: x, y
+		this.vel = random(0.5, 1);
+		this.jellyfishColor = jellyfishColor;
+        this.legsColor = legsColor;
+        this.size = 4; // for scaling
+	}
+  
+    drawBezier(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, strokeVal, color) {
+      strokeWeight(strokeVal);
+      stroke(color);
+      bezier(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+    }
+  
+    drawHead(val) {
+      // Head of jellyfish
+      for (let i = 0; i <= PI * 3; i += PI/40) {
+        rotateY(PI / 20); // width of curves outside the head
+        noFill();
+        push();
+        translate(0,-20,0);
+        
+        // Head - only outside part
+        this.drawBezier(0,5,i, // x1, y1, z1
+               40,0,i, // x2, y2, z2
+               60 + 12 * sin(val * 0.5),15,i, // x3, y3, z3
+               60 + 10 * sin(val),50,i, // x4, y4, z4
+               12, this.jellyfishColor); 
+        
+        // Head - inside part
+        this.drawBezier(20,30,i, // x1, y1, z1
+                    20,20,i, // x2, y2, z2
+                    50+12*sin(val * 0.5),15,i, // x3, y3, z3
+                    60+10*sin(val),53,i, // x4, y4, z4
+                    8, this.jellyfishColor);
+        pop();
+      }  
+    }
+  
+    drawLegs(val) {
+     // 'Legs' of jellyfish
+      for (let i = 0; i <= PI*2; i += PI/8) {
+        rotateY(PI / 6);
+        push();
+        
+        // Longer legs - inside
+        this.drawBezier(5,0,i, // x1, y1, z1
+               5, 30, i, // x2, y2, z2
+               10 + 12 * sin(val * 0.3),40,i, // x3, y3, z3
+               10 + 12 * sin(val), 90 - 10 * sin(val),i, // x4, y4, z4
+               4.5, this.legsColor); // number = width of legs
+        
+        // Longer legs - outside, thicker
+        this.drawBezier(10,0,i, // x1, y1, z1
+               5, 50, i, // x2, y2, z2
+               12 + 12 * sin(val * 0.3),40,i, // x3, y3, z3
+               20 + 12 * sin(val), 90 - 10 * sin(val),i, // x4, y4, z4
+               2, this.legsColor); // number = width of legs
+        
+        // Shorter legs
+        this.drawBezier(20,10,i, 
+               20,30,i, // x2, y2, z2
+               25 + 10 * sin(val * 0.65),40,i, // x3, y3, z3
+               40 + 10 * sin(val),70 - 10 * sin(val),i, // x4, y4, z4
+               2, "rgba(189, 181, 213, 0.5)"); // 'Wisteria' color
+        pop();
+      }
+    }
+  
+    drawJellyfish(scaleVal, headGlobalVal, legsGlobalVal) {
+      this.drawHead(headGlobalVal);
+      this.drawLegs(legsGlobalVal);
+    }
+  
+	move(){
+        // for faster movement, change 'this.vel'
+		this.x = this.x + this.direction.x * this.vel; 
+		this.y = this.y + this.direction.y * this.vel;
+        this.z = this.z + this.direction.z * this.vel; 
+	}
+	
+	display(i){
+		push();
+			translate(this.x, this.y, this.z); 
+			scale(this.size);
+			noFill();
+			strokeWeight(2);
+            
+            // Rotate jellyfish in its direction of movement
+            rotateX(this.direction.x/80);
+            rotateZ(this.direction.x/80 + this.direction.y/150); // on purpose
+           // rotateZ(PI/8);
+			let jelly_1 = this.drawJellyfish(0, 
+                                             this.getCorrectGlobalHeadVal(i),
+                                             this.getCorrectGlobalLegsVal(i));
+		pop();
+
+		if(t == "up"){
+		  m +=0.001;
+          //console.log("for up:" + m);
+			if(m >= 0.2){ 
+              //console.log("go down");
+				t = "down";
+			}
+		}else{
+		  m -= 0.001;
+          //console.log("for down:" + m);
+			if(m <= 0){ 
+              //console.log("go up");
+				t = "up";
+			}
+		}
+	}
+  
+    // Have to use global value which will update in draw(), otherwise no body movement
+    getCorrectGlobalHeadVal(i) {
+      if (i == 0) {
+        return headVal1;
+      } else if (i == 1) {
+        return headVal2;
+      } else if (i == 2) {
+        return headVal3;
+      } else if (i == 3) {
+        return headVal4;
+      } else if (i == 4) {
+        return headVal5;
+      } else if (i == 5) {
+        return headVal6;
+      } else {
+        return headVal7;
+      }
+    }
+  
+    // Have to use global value which will update in draw(), otherwise no body movement
+    getCorrectGlobalLegsVal(i) {
+      if (i == 0) {
+        return legsVal1;
+      } else if (i == 1) {
+        return legsVal2;
+      } else if (i == 2) {
+        return legsVal3;
+      } else if (i == 3) {
+        return legsVal4;
+      } else if (i == 4) {
+        return legsVal5;
+      } else if (i == 5) {
+        return legsVal6;
+      } else {
+        return legsVal7;
+      }
+    }
+	
+	updateVel(){
+		this.vel = this.vel*0.99;
+	}
+	
+	changeVel(){
+        this.vel = random(0.1,0.4); // smoother change of direction
+	}
+	
+	changeDirection(){
+		this.angle = random(0, 2*TWO_PI); 
+		this.direction = p5.Vector.fromAngle(this.angle, 2)
+	}
+	
+    // WEBGL = the origin is positioned at the center of the canvas
+	isInside() { 
+      return this.x >= -windowWidth/2 + 200 && this.x <= windowWidth/2 - 200 && 
+        this.y >= -windowHeight/2 + 100 && this.y <= windowHeight/2 - 100;
+	}
+  
+    getHeadMovementVal() {
+      return this.headMovementVal;
+    }
+  
+    getLegsMovementVal() {
+      return this.legsMovementVal;
+    }
+  
+    getPositionX() {
+      return this.x;
+    }
+  
+    getPositionY() {
+      return this.y;
+    }
+}
+
+/////////////////////////////////////////////
+// Waves
+/////////////////////////////////////////////
+function drawWaves() {
+    stroke(255);
+	//noFill();
+	fill(10,65,90,10);
+
+	// Starting the shape of the wave
+	beginShape(); 
+    var xoff = 0;	 
+	
+	// Get amplitude level from sound to set the height of the wave
+	var level = amplitude.getLevel();
+	
+	for (var x = -width; x <= width + 20; x += 20) {
+		var y = map(level, -1, 1, 0, 1); // Map amp level to noise (0-1)
+		var n = map(noise(xoff+millis()*0.0003, yoff*5), 0, 1, height, height/2); // Map noise to y values
+
+	// Set the vertex
+    vertex(x, y*n - windowHeight/1.5); // POSLEDNY ARGUMENT = POSUNUTIE VLN VYSSIE NA Y-OSI
+  	xoff += 0.02;
+  }
+    
+  //Set the speed of moving waves by incrementing with amp level
+  yoff += level/25;
+	
+  // Close of shape
+  vertex(3*width, 3*height);
+  vertex(0, 3*height);
+	
+  endShape(CLOSE);
+}
+
+/////////////////////////////////////////////
+// Bubbles
+/////////////////////////////////////////////
+
+function randomBubble(i, bubbleNumber){
+	return {
+		x: random(-windowWidth, windowWidth),
+		y: random(-windowHeight, windowHeight),
+		size: int(random(5, 15))
+	}
+}
+
+function drawBubble(bubble){
+	push();
+		translate(bubble.x, bubble.y);
+		noFill();
+		stroke("#caf0f8");
+		ellipse(0, 0, bubble.size, bubble.size);
+		stroke("#00b4d8")
+		ellipse(0, 1, bubble.size-1, bubble.size-1);
+		if(bubble.y <= -windowHeight){ // 0 = for ending in the middle of the screen
+			bubble.y = windowHeight;
+		}else{
+			bubble.x = bubble.x + random(-2, 2);
+			bubble.y = bubble.y - random(2, 5);
+		}
+	pop();
+}
+
+/////////////////////////////////////////////
+// Window functions
+/////////////////////////////////////////////
+
+function windowResized() {
+  resizeCanvas(windowWidth, -50 + windowHeight, WEBGL);
+  setup();
+}
